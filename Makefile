@@ -1,4 +1,4 @@
-PROJECT_NAME := test # myBLE_server
+PROJECT ?= test
 CLI := arduino-cli
 UART_TTY := /dev/ttyUSB0
 FQBN := esp32:esp32:esp32
@@ -54,7 +54,11 @@ configure: minicom config_global config_git info
 info:
 	@echo "==== connected boards: "
 	$(CLI) board list
-run:
-	@echo "==== compiling and running $(PROJECT_NAME)..."
-	$(CLI) compile --fqbn $(FQBN) --build-cache-path ./tmp $(PROJECT_NAME)
-	$(CLI) upload -p $(UART_TTY) --fqbn $(FQBN) $(PROJECT_NAME)
+
+compile:
+	@echo "==== compiling '$(PROJECT)' example..."
+	$(CLI) compile --fqbn $(FQBN) --build-cache-path ./tmp $(PROJECT)
+
+run:	compile
+	@echo "==== uploading  '$(PROJECT)'..."
+	$(CLI) upload -p $(UART_TTY) --fqbn $(FQBN) $(PROJECT)

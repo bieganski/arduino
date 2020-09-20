@@ -4,7 +4,7 @@ LIBS_URLS_FNAME='git_libs.txt'
 ESP32_VERSION="1.0.4"
 
 set -u
-
+set -x
 log() {
 	echo "==== $1"
 }
@@ -27,9 +27,9 @@ install_git_repos() {
 	fi
 	
 	cd $path/$ESP32_VERSION/libraries
-	log "cloning repositories from $LIBS_URLS_FULL_PATH..."
+	log "cloning repositories from $LIBS_URLS_FULL_PATH to $path/libraries directory..."
 	cat $LIBS_URLS_FULL_PATH | rev | cut -d / -f 1 | rev | xargs rm -rf
-	cat $LIBS_URLS_FULL_PATH | xargs git clone
+	cat $LIBS_URLS_FULL_PATH | xargs -I git clone "{}"
 	log "all repositories cloned properly!"
 	popd > /dev/null
 }

@@ -1,4 +1,10 @@
-PROJECT ?= test
+PROJECT_DEFAULT := test
+
+ifeq ($(PROJECT),)
+$(info "==== PROJECT variable not set, assuming default - $(PROJECT_DEFAULT)")
+endif
+
+PROJECT ?= $(PROJECT_DEFAULT)
 CLI := arduino-cli
 UART_TTY := /dev/ttyUSB0
 FQBN := esp32:esp32:esp32
@@ -59,6 +65,9 @@ compile:
 	@echo "==== compiling '$(PROJECT)' example..."
 	$(CLI) compile --fqbn $(FQBN) --build-cache-path ./tmp $(PROJECT)
 
-run:	compile
+upload:
 	@echo "==== uploading  '$(PROJECT)'..."
 	$(CLI) upload -p $(UART_TTY) --fqbn $(FQBN) $(PROJECT)
+
+run: compile upload
+

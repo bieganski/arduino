@@ -9,7 +9,7 @@ const char* password = PASSWORD; // "REPLACE_WITH_YOUR_PASSWORD";
 
 // const char* ntpServer = "pool.ntp.org";
 const char* ntpServer = "pl.pool.ntp.org";
-const long  gmtOffset_sec = 0;
+const long  gmtOffset_sec = 3600; // Warsaw time
 const int   daylightOffset_sec = 3600;
 
 void setup(){
@@ -18,6 +18,7 @@ void setup(){
   // Connect to Wi-Fi
   Serial.print("Connecting to ");
   Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -31,13 +32,14 @@ void setup(){
   printLocalTime();
 
   //disconnect WiFi as it's no longer needed
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
+  
 }
 
 void loop(){
   delay(1000);
   printLocalTime();
+
+  
 }
 
 void printLocalTime(){
@@ -46,6 +48,8 @@ void printLocalTime(){
     Serial.println("Failed to obtain time");
     return;
   }
+
+  Serial.printf("ostro: %d:%d\n", timeinfo.tm_hour, timeinfo.tm_min);
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
   Serial.print("Day of week: ");
   Serial.println(&timeinfo, "%A");

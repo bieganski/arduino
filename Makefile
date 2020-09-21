@@ -51,10 +51,10 @@ config_global:
 	$(CLI) core install esp32:esp32
 	pip2 install pyserial
 	
-config_git:
-	./install_git_libs.sh
+config_external:
+	./install_external_libs.sh
 
-configure: minicom config_global config_git info
+configure: minicom config_global config_external info
 
 
 info:

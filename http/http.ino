@@ -23,11 +23,6 @@ void setup() {
   
   WiFi.begin(ssid, password);
   
-  if (!WiFi.setHostname("esp32")) {
-    Serial.println("kurwaaa, hostname");
-  } else {
-    Serial.println("hostname zadzialalo wtf");
-  }
   Serial.println("Connecting");
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -50,9 +45,9 @@ void loop() {
       String serverPath = serverName + "?temperature=24.37";
 
 
-      if (!http.connected()) {
-        Serial.print("nie dzial szajs\n");
-      }
+      // if (!http.connected()) {
+      //   Serial.print("nie dzial szajs\n");
+      // }
       
       // Your Domain name with URL path or IP address with path
       http.begin(serverPath.c_str());

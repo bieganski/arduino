@@ -1,0 +1,19 @@
+
+#include "XTronical_ST7735.h"
+
+#define cs   5
+#define dc   2
+#define rst  4
+
+void setup() {
+	
+	Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
+	tft.init();
+	
+	for(int i = 0 ; i < 50; i++) {
+		tft.drawPixel(i, 50, 0xC6);
+	}
+}
+
+void loop() {
+}

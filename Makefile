@@ -7,9 +7,16 @@ endif
 PROJECT ?= $(PROJECT_DEFAULT)
 CLI := arduino-cli
 UART_TTY := /dev/ttyUSB0
-FQBN := esp32:esp32:esp32
+# FQBN := esp32:esp32:esp32
+FQBN := esp32:esp32:lolin32
 # FQBN := arduino:avr:uno
 
+OPTIONAL_UPLOAD_SPEED=
+# there is a 'bug' in LOLIN board
+# that it can only be programmed with low baud rate.
+ifeq ($(FQBN),esp32:esp32:lolin32)
+	OPTIONAL_UPLOAD_SPEED := :UploadSpeed=115200
+endif
 
 UNAME_S := $(shell uname -s)
 APT_MANAGER := 
@@ -67,7 +74,7 @@ compile:
 
 upload:
 	@echo "==== uploading  '$(PROJECT)'..."
-	$(CLI) upload -p $(UART_TTY) --fqbn $(FQBN) $(PROJECT)
+	$(CLI) upload -p $(UART_TTY) -b 115200 --fqbn $(FQBN)$(OPTIONAL_UPLOAD_SPEED) $(PROJECT)
 
 run: compile upload
 

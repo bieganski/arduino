@@ -1,0 +1,8 @@
+5V          -> LED
+IO18 (SCK)  -> SCK
+IO23 (MOSI) -> SDA
+IO2         -> A0
+IO4         -> RESET
+IO5 (SS)    -> CS
+GND (12,GDN,13) -> GND
+3.3V        -> VCC

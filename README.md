@@ -12,4 +12,43 @@ Following diretory names correspond to projects:
 
 `doc` directory containes some documentation.
 
+# Setup
+
+First, install `arduino-cli`.
+
+MacOS:
+```
+brew update
+brew install arduino-cli
+```
+
+Linux:
+```
+curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+```
+
+then:
+
+```
+make config_global # it should install arduino-cli
+make install_board
+```
+
+
+# Compile and upload
+Let's say you have subdirectory `dirname`. It must contain file `dirname.ino`, containing both `setup` and `loop` functions. 
+
+
+Depending on which ESP32 board you use, change `Makefile` `$(FQBN)` variable:
+* Lolin32 - `FQBN := esp32:esp32:lolin32`
+* DevKitC - `FQBN := esp32:esp32:esp32`
+
+Compilation:
+```
+make PROJECT=dirname compile
+```
+Upload:
+```
+make PROJECT=dirname upload
+```
 

@@ -7,8 +7,8 @@ endif
 PROJECT ?= $(PROJECT_DEFAULT)
 CLI := arduino-cli
 UART_TTY := /dev/ttyUSB0
-FQBN := esp32:esp32:esp32
-# FQBN := esp32:esp32:lolin32
+# FQBN := esp32:esp32:esp32
+FQBN := esp32:esp32:lolin32
 # FQBN := arduino:avr:uno
 
 OPTIONAL_UPLOAD_SPEED=

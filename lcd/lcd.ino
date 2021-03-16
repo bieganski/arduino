@@ -26,7 +26,7 @@ as well as Adafruit raw 1.8" TFT display
   MIT license, all text above must be included in any redistribution
  ****************************************************/
 #include <Adafruit_GFX.h>    // Core graphics library
-#include <XTronical_ST7735.h> // Hardware-specific library
+#include "XTronical_ST7735.h" // Hardware-specific library
 #include <SPI.h>
 
 // set up pins we are going to use to talk to the screen

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 LIBS_URLS_FNAME='git_libs.txt'
-ESP32_VERSION="1.0.4"
+ESP32_VERSION="1.0.5"
 
 # set -u
-# set -x
-
+set -x
+set -e
 
 log() {
 	echo "==== $1"
@@ -26,20 +26,22 @@ find_libs_path() {
 		log "error! couldn't find ESP32 v.$ESP32_VERSION in $path! please change LIB32_VERSION variable value!"
 		exit
 	fi
-	popd . > /dev/null
+	popd > /dev/null
 	echo $path/$ESP32_VERSION/libraries
 }
 
 install_lcd_libs() {
 	log "installing LCD libs (GFX, BusIO)..."
-	local $path=$(find_libs_path)
+	local path=$(find_libs_path)
 	pushd . > /dev/null
 	cd $path
+	rm -rf Adafruit_BusIO
 	git clone https://github.com/adafruit/Adafruit_BusIO
-	cp Adafruit_BusIO/* .
+	cp -rf Adafruit_BusIO/* .
+	rm -rf Adafruit-GFX-Library
 	git clone https://github.com/adafruit/Adafruit-GFX-Library
-	cp Adafruit-GFX-Library/* .
-	popd . > /dev/null
+	cp -rf Adafruit-GFX-Library/* .
+	popd > /dev/null
 	log "LCD libraries installed successfully!"
 }
 
@@ -52,14 +54,14 @@ install_git_repos() {
 	cd $path
 	log "cloning repositories from $LIBS_URLS_FULL_PATH to $path/libraries directory..."
 	cat $LIBS_URLS_FULL_PATH | rev | cut -d / -f 1 | rev | xargs rm -rf
-	cat $LIBS_URLS_FULL_PATH | xargs -I git clone "{}"
+	cat $LIBS_URLS_FULL_PATH | xargs -I{} git clone "{}"
 	log "all repositories cloned properly!"
 	popd > /dev/null
 }
 
 install_all() {
-	check_file $LIBS_URLS_FNAME
-	install_git_repos
+# 	check_file $LIBS_URLS_FNAME
+# 	install_git_repos
 	install_lcd_libs
 }
 

@@ -7,8 +7,8 @@ endif
 PROJECT ?= $(PROJECT_DEFAULT)
 CLI := arduino-cli
 UART_TTY := /dev/ttyUSB0
-# FQBN := esp32:esp32:esp32
-FQBN := esp32:esp32:lolin32
+FQBN := esp32:esp32:esp32
+# FQBN := esp32:esp32:lolin32
 # FQBN := arduino:avr:uno
 
 OPTIONAL_UPLOAD_SPEED=
@@ -37,6 +37,9 @@ install_board:
 	# $(CLI) core install arduino:avr
 	$(CLI) core install esp32:esp32
 
+install_libs:
+	$(CLI) lib install ArduinoJson
+
 minicom:
 	@echo "==== configuring minicom... (need root)"
 	@sudo $(APT_MANAGER) install minicom
@@ -61,7 +64,7 @@ config_global:
 config_external:
 	./install_external_libs.sh
 
-configure: minicom config_global config_external info
+configure: minicom config_global config_external info install_libs
 
 
 info:

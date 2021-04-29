@@ -7,7 +7,8 @@ const char* ssid = SSID;
 const char* password = PASSWORD;
 
 //Your Domain name with URL path or IP address with path
-String serverName = "http://www.google.com";
+// String serverName = "http://www.google.com";
+String serverName = "http://192.168.0.164";
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
@@ -92,7 +93,7 @@ void loop() {
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
 
-      String serverPath = serverName + "?temperature=24.37";
+      String serverPath = serverName + "/?temperature=24.37";
 
 
       // if (!http.connected()) {

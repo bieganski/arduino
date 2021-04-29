@@ -25,33 +25,163 @@ as well as Adafruit raw 1.8" TFT display
   Written by Limor Fried/Ladyada for Adafruit Industries.
   MIT license, all text above must be included in any redistribution
  ****************************************************/
-#include <Adafruit_GFX.h>    // Core graphics library
 #include "XTronical_ST7735.h" // Hardware-specific library
+#include <Adafruit_GFX.h>     // Core graphics library
 #include <SPI.h>
 
 // set up pins we are going to use to talk to the screen
-#define TFT_DC     2       // register select (stands for Data Control perhaps!)
-#define TFT_RST   4         // Display reset pin, you can also connect this to the ESP32 reset
-                            // in which case, set this #define pin to -1!
-#define TFT_CS   5       // Display enable (Chip select), if not enabled will not talk on SPI bus
+#define TFT_DC 16 // register select (stands for Data Control perhaps!)
+#define TFT_RST                                                                \
+  17 // Display reset pin, you can also connect this to the ESP32 reset
+     // in which case, set this #define pin to -1!
+#define TFT_CS                                                                 \
+  5 // Display enable (Chip select), if not enabled will not talk on SPI bus
 
-// initialise the routine to talk to this display with these pin connections (as we've missed off
-// TFT_SCLK and TFT_MOSI the routine presumes we are using hardware SPI and internally uses 13 and 11
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);  
+#include <ArduinoJson.h>
+
+#include "private.h"
+#include <HTTPClient.h>
+#include <WiFi.h>
+
+const char *ssid = SSID;
+const char *password = PASSWORD;
+
+// Your Domain name with URL path or IP address with path
+// String serverName = "http://www.google.com";
+String serverName = "http://192.168.0.164:5000";
+
+// the following variables are unsigned longs because the time, measured in
+// milliseconds, will quickly become a bigger number than can be stored in an
+// int.
+unsigned long lastTime = 0;
+// Timer set to 10 minutes (600000)
+// unsigned long timerDelay = 600000;
+// Set timer to 5 seconds (5000)
+unsigned long timerDelay = 5000;
+
+// initialise the routine to talk to this display with these pin connections (as
+// we've missed off TFT_SCLK and TFT_MOSI the routine presumes we are using
+// hardware SPI and internally uses 13 and 11
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
 float p = 3.1415926;
 
+void setupWIFI() {
+  Serial.begin(115200);
+
+  WiFi.begin(ssid, password);
+
+  Serial.println("Connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 "
+                 "seconds before publishing the first reading.");
+}
+
+void printLine() {
+  Serial.println();
+  for (int i = 0; i < 30; i++)
+    Serial.print("-");
+  Serial.println();
+}
+
+void loopWIFIandLCD() {
+  String serverPath = serverName + "/?temperature=24.37";
+
+  if ((millis() - lastTime) > timerDelay) {
+    // Check WiFi connection status
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+
+      String serverPath = serverName + "/?temperature=24.37";
+
+      http.begin(serverPath.c_str());
+
+      // Send HTTP GET request
+      int httpResponseCode = http.GET();
+
+      if (httpResponseCode > 0) {
+
+        StaticJsonDocument<2000> doc;
+        // char json[] = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48."
+        //               "756080,2.302038]}";
+
+        // Deserialize the JSON document
+        String payload = http.getString();
+        DeserializationError error = deserializeJson(doc, payload);
+
+        // Test if parsing succeeds.
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+          // return;
+        } else {
+          int num_lines = 2;
+          tft.setCursor(0, 0);
+          tft.setTextWrap(true);
+          tft.setTextSize(2);
+          tft.fillScreen(ST7735_BLACK);
+
+          for (int i = 0; i < num_lines; i++) {
+            const char* first_line = doc["data"][i]["line"];
+            String first_time      = doc["data"][i]["time"];
+            const char* time_left  = doc["data"][i]["left"];
+            tft.setTextColor(ST7735_YELLOW);
+            tft.print(first_line);
+            tft.setTextColor(ST7735_WHITE);
+            tft.print("-");
+            tft.setTextColor(ST7735_GREEN);
+            tft.print(first_time);
+
+            if (first_time == "NOT TODAY") {
+              tft.print("\n");
+              continue;
+            }
+              
+            tft.setTextColor(ST7735_WHITE);
+            tft.print("\n (");
+            tft.setTextColor(ST7735_BLUE);
+            tft.print((const char*) time_left);
+            tft.setTextColor(ST7735_WHITE);
+            tft.print(")\n");
+          }
+          delay(2000);
+        }
+
+      } else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+      }
+      // Free resources
+      http.end();
+    } else {
+      Serial.println("WiFi Disconnected");
+    }
+    lastTime = millis();
+  }
+
+  delay(1000);
+}
+
 void setup(void) {
-  tft.init();   // initialize a ST7735S chip,
+  tft.init(); // initialize a ST7735S chip,
+  // tft.fillScreen(ST7735_BLACK);
+  setupWIFI();
 }
 
-void loop() {  
-  for(uint16_t rotation=0; rotation<4;rotation++)
-    Demo(rotation);
+void loop() {
+  for (uint16_t rotation = 0; rotation < 4; rotation++)
+    // Demo(rotation);
+    loopWIFIandLCD();
 }
 
-void Demo(uint16_t rotation)
-{
+void Demo(uint16_t rotation) {
 
   tft.setRotation(rotation);
   uint16_t time = millis();
@@ -62,8 +192,11 @@ void Demo(uint16_t rotation)
 
   // large block of text
   tft.fillScreen(ST7735_BLACK);
- 
-  testdrawtext("This is a test of some very log text that I written for the sole purpose of checking if the display displays very long text correctly.", ST7735_WHITE);
+
+  testdrawtext(
+      "This is a test of some very log text that I written for the sole "
+      "purpose of checking if the display displays very long text correctly.",
+      ST7735_WHITE);
   delay(1000);
 
   // tft print function!
@@ -71,7 +204,7 @@ void Demo(uint16_t rotation)
   delay(4000);
 
   // a single pixel
-  tft.drawPixel(tft.width()/2, tft.height()/2, ST7735_GREEN);
+  tft.drawPixel(tft.width() / 2, tft.height() / 2, ST7735_GREEN);
   delay(500);
 
   testdrawrects(ST7735_GREEN);
@@ -90,8 +223,7 @@ void Demo(uint16_t rotation)
 
   testtriangles();
   delay(1000);
-  for(int i=2;i>0;i--)
-  {
+  for (int i = 2; i > 0; i--) {
     tft.invertDisplay(true);
     delay(500);
     tft.invertDisplay(false);
@@ -99,10 +231,8 @@ void Demo(uint16_t rotation)
   }
 }
 
-
-
 void testdrawtext(char *text, uint16_t color) {
-  tft.setCursor(0,0);
+  tft.setCursor(0, 0);
   tft.setTextColor(color);
   tft.setTextWrap(true);
   tft.print(text);
@@ -110,8 +240,9 @@ void testdrawtext(char *text, uint16_t color) {
 
 void testdrawrects(uint16_t color) {
   tft.fillScreen(ST7735_BLACK);
-  for (int16_t x=0; x < tft.width(); x+=6) {
-    tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color);
+  for (int16_t x = 0; x < tft.width(); x += 6) {
+    tft.drawRect(tft.width() / 2 - x / 2, tft.height() / 2 - x / 2, x, x,
+                 color);
   }
 }
 
@@ -178,22 +309,24 @@ void mediabuttons() {
 }
 void testfillrects(uint16_t color1, uint16_t color2) {
   tft.fillScreen(ST7735_BLACK);
-  for (int16_t x=tft.width()-1; x > 6; x-=6) {
-    tft.fillRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color1);
-    tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color2);
+  for (int16_t x = tft.width() - 1; x > 6; x -= 6) {
+    tft.fillRect(tft.width() / 2 - x / 2, tft.height() / 2 - x / 2, x, x,
+                 color1);
+    tft.drawRect(tft.width() / 2 - x / 2, tft.height() / 2 - x / 2, x, x,
+                 color2);
   }
 }
 void testfillcircles(uint8_t radius, uint16_t color) {
-  for (int16_t x=radius; x < tft.width(); x+=radius*2) {
-    for (int16_t y=radius; y < tft.height(); y+=radius*2) {
+  for (int16_t x = radius; x < tft.width(); x += radius * 2) {
+    for (int16_t y = radius; y < tft.height(); y += radius * 2) {
       tft.fillCircle(x, y, radius, color);
     }
   }
 }
 
 void testdrawcircles(uint8_t radius, uint16_t color) {
-  for (int16_t x=0; x < tft.width()+radius; x+=radius*2) {
-    for (int16_t y=0; y < tft.height()+radius; y+=radius*2) {
+  for (int16_t x = 0; x < tft.width() + radius; x += radius * 2) {
+    for (int16_t y = 0; y < tft.height() + radius; y += radius * 2) {
       tft.drawCircle(x, y, radius, color);
     }
   }
@@ -203,16 +336,16 @@ void testtriangles() {
   tft.fillScreen(ST7735_BLACK);
   int color = 0xF800;
   int t;
-  int w = tft.width()/2;
-  int x = tft.height()-1;
+  int w = tft.width() / 2;
+  int x = tft.height() - 1;
   int y = 0;
   int z = tft.width();
-  for(t = 0 ; t <= 15; t++) {
+  for (t = 0; t <= 15; t++) {
     tft.drawTriangle(w, y, y, x, z, x, color);
-    x-=4;
-    y+=4;
-    z-=4;
-    color+=100;
+    x -= 4;
+    y += 4;
+    z -= 4;
+    color += 100;
   }
 }
 
@@ -221,19 +354,19 @@ void testroundrects() {
   int color = 100;
   int i;
   int t;
-  for(t = 0 ; t <= 4; t+=1) {
+  for (t = 0; t <= 4; t += 1) {
     int x = 0;
     int y = 0;
-    int w = tft.width()-2;
-    int h = tft.height()-2;
-    for(i = 0 ; i <= 16; i+=1) {
+    int w = tft.width() - 2;
+    int h = tft.height() - 2;
+    for (i = 0; i <= 16; i += 1) {
       tft.drawRoundRect(x, y, w, h, 5, color);
-      x+=2;
-      y+=3;
-      w-=4;
-      h-=6;
-      color+=1100;
+      x += 2;
+      y += 3;
+      w -= 4;
+      h -= 6;
+      color += 1100;
     }
-    color+=100;
+    color += 100;
   }
 }
